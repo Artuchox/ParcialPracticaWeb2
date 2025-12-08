@@ -8,6 +8,7 @@ import MoodWidget from '@/components/widgets/MoodWidget'
 import PlaylistDisplay from '@/components/PlaylistDisplay'
 // Importo la función de lógica 
 import { getRecommendations } from '@/lib/spotify' 
+import { generatePlaylist } from '@/lib/spotify'
 
 export default function Dashboard() {
   // 1. ESTADO: Aquí guardamo lo que el usuario selecciona en los Widgets 
@@ -33,18 +34,22 @@ export default function Dashboard() {
   async function handleGenerate() {
     setLoading(true)
     try {
-      // Aquí se llama a la función de lib/spotify.js pasando los filtros
-      // NOTA: Asegúrate de pasar el token si es necesario, o manejarlo internamente
-      const tracks = await getRecommendations(filters) 
+      // Preparamos el objeto tal cual lo pide tu función generatePlaylist
+      const preferences = {
+        artists: filters.artist ? [filters.artist] : [], 
+        genres: filters.genre ? [filters.genre] : [],    
+        decades: [],
+        popularity: [filters.mood, 100]
+      }
+      const tracks = await generatePlaylist(preferences)
       setPlaylist(tracks)
     } catch (error) {
-      console.error("Error generando playlist:", error)
-      alert("Hubo un error contactando con Spotify")
+      console.error("Error:", error)
+      alert("Error al generar la playlist. Revisa tu token.")
     } finally {
       setLoading(false)
     }
   }
-
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Mixer Dashboard</h1>

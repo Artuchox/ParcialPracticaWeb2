@@ -1,36 +1,102 @@
+function getAccessToken() {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('spotify_access_token');
+  }
+  return null;
+}
+
+// 2. Función auxiliar para buscar el ID de un artista dado su nombre
+// Esto es necesario porque para pedir "top-tracks" necesitas el ID numérico, no el nombre.
+async function getArtistId(artistName, token) {
+  try {
+    const res = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+    const data = await res.json();
+    return data.artists?.items[0]?.id || null;
+  } catch (error) {
+    console.error(`Error buscando artista ${artistName}:`, error);
+    return null;
+  }
+}
+
+// 3. Función principal para generar la playlist
 export async function generatePlaylist(preferences) {
   const { artists, genres, decades, popularity } = preferences;
   const token = getAccessToken();
+
+  if (!token) {
+    throw new Error("No se encontró el token de acceso. Por favor, inicia sesión.");
+  }
+
   let allTracks = [];
 
-  // 1. Obtener top tracks de artistas seleccionados
-  for (const artist of artists) {
-    const tracks = await fetch(
-      `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
+  // PASO 1: Obtener canciones de Artistas
+  if (artists && artists.length > 0) {
+    for (const artistInput of artists) {
+      let artistId = null;
+
+      // Si el input es un objeto con id, úsalo. Si es string (nombre), búscalo.
+      if (typeof artistInput === 'object' && artistInput.id) {
+        artistId = artistInput.id;
+      } else if (typeof artistInput === 'string') {
+        artistId = await getArtistId(artistInput, token);
       }
-    );
-    const data = await tracks.json();
-    allTracks.push(...data.tracks);
+
+      if (artistId) {
+        try {
+          // Endpoint correcto de Spotify para Top Tracks
+          const response = await fetch(
+            `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=ES`,
+            {
+              headers: { 'Authorization': `Bearer ${token}` } 
+            }
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            // Añadimos las canciones encontradas al array general
+            allTracks.push(...data.tracks);
+          }
+        } catch (error) {
+          console.error(`Error obteniendo top tracks para ${artistId}`, error);
+        }
+      }
+    }
   }
 
-  // 2. Buscar por géneros
-  for (const genre of genres) {
-    const results = await fetch(
-      `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
+  // PASO 2: Buscar canciones por Género 
+  if (genres && genres.length > 0) {
+    for (const genre of genres) {
+      try {
+        // Usamos el endpoint de Search filtrando por genre:
+        const query = encodeURIComponent(`genre:${genre}`);
+        const response = await fetch(
+          `https://api.spotify.com/v1/search?q=${query}&type=track&limit=20`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          allTracks.push(...data.tracks.items);
+        }
+      } catch (error) {
+        console.error(`Error buscando género ${genre}`, error);
       }
-    );
-    const data = await results.json();
-    allTracks.push(...data.tracks.items);
+    }
   }
 
-  // 3. Filtrar por década
-  if (decades.length > 0) {
+  // PASO 3: Filtrar por Década (Tu lógica original) 
+  if (decades && decades.length > 0) {
     allTracks = allTracks.filter(track => {
-      const year = new Date(track.album.release_date).getFullYear();
+      const releaseDate = track.album.release_date; 
+      const year = parseInt(releaseDate.substring(0, 4));
+      
       return decades.some(decade => {
         const decadeStart = parseInt(decade);
         return year >= decadeStart && year < decadeStart + 10;
@@ -38,18 +104,26 @@ export async function generatePlaylist(preferences) {
     });
   }
 
-  // 4. Filtrar por popularidad
+  // PASO 4: Filtrar por Popularidad (Tu lógica original) 
   if (popularity) {
-    const [min, max] = popularity;
+    // Aseguramos que popularity sea un array [min, max]
+    // Si viene del slider del Dashboard puede que sea un solo número (el mínimo)
+    let min, max;
+    if (Array.isArray(popularity)) {
+      [min, max] = popularity;
+    } else {
+      min = popularity;
+      max = 100;
+    }
+
     allTracks = allTracks.filter(
       track => track.popularity >= min && track.popularity <= max
     );
   }
-
-  // 5. Eliminar duplicados y limitar a 30 canciones
+  // PASO 5: Eliminar duplicados y limitar resultado 
   const uniqueTracks = Array.from(
     new Map(allTracks.map(track => [track.id, track])).values()
-  ).slice(0, 30);
+  ).slice(0, 30); // Limitamos a 30 canciones
 
   return uniqueTracks;
 }
