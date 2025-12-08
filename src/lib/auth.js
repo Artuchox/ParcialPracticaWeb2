@@ -1,6 +1,4 @@
-// src/lib/auth.js
-
-// Generar string aleatorio para el parámetro 'state' (seguridad)
+// Generar string aleatorio para el parámetro 'state'
 export function generateRandomString(length) {
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let text = '';
@@ -12,9 +10,8 @@ export function generateRandomString(length) {
 
 // Construir URL de autorización de Spotify
 export function getSpotifyAuthUrl() {
-  // Usamos NEXT_PUBLIC_ para que las variables sean visibles en el navegador
-  const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI;
+  const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || '';
+  const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || '';
   const state = generateRandomString(16);
 
   // Guardar el state para validación posterior (prevenir CSRF)
@@ -26,9 +23,8 @@ export function getSpotifyAuthUrl() {
     'user-read-private',
     'user-read-email',
     'user-top-read',
-    // Descomenta estas líneas si tu app en el dashboard de Spotify tiene estos permisos activados
-    // 'playlist-modify-public',
-    // 'playlist-modify-private'
+    'playlist-modify-public',
+    'playlist-modify-private'
   ].join(' ');
 
   const params = new URLSearchParams({
@@ -39,32 +35,26 @@ export function getSpotifyAuthUrl() {
     scope: scope
   });
 
-  // CORRECCIÓN: URL oficial de Spotify
   return `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
 // Guardar tokens en localStorage
 export function saveTokens(accessToken, refreshToken, expiresIn) {
   const expirationTime = Date.now() + expiresIn * 1000;
-  
-  // Nombres de claves unificados con lo que espera tu archivo spotify.js
-  localStorage.setItem('spotify_access_token', accessToken);
+  localStorage.setItem('spotify_token', accessToken);
   localStorage.setItem('spotify_refresh_token', refreshToken);
   localStorage.setItem('spotify_token_expiration', expirationTime.toString());
 }
 
 // Obtener token actual (con verificación de expiración)
 export function getAccessToken() {
-  if (typeof window === 'undefined') return null;
-
-  const token = localStorage.getItem('spotify_access_token');
+  const token = localStorage.getItem('spotify_token');
   const expiration = localStorage.getItem('spotify_token_expiration');
   
   if (!token || !expiration) return null;
   
-  // Si el token expiró, retornar null (aquí podrías implementar la lógica de refresh si quisieras)
+  // Si el token expiró, retornar null
   if (Date.now() > parseInt(expiration)) {
-    console.warn("El token ha expirado");
     return null;
   }
   
@@ -78,9 +68,35 @@ export function isAuthenticated() {
 
 // Cerrar sesión
 export function logout() {
-  localStorage.removeItem('spotify_access_token');
+  localStorage.removeItem('spotify_token');
   localStorage.removeItem('spotify_refresh_token');
   localStorage.removeItem('spotify_token_expiration');
-  // Opcional: recargar la página o redirigir al home
-  window.location.href = '/';
+}
+
+export async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('spotify_refresh_token');
+  if (!refreshToken) return null;
+
+  try {
+    const response = await fetch('/api/refresh-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+
+    if (!response.ok) {
+      console.error("Error refreshing token", await response.text());
+      return null;
+    }
+
+    const data = await response.json();
+
+    // Guardar nuevo token
+    saveTokens(data.access_token, refreshToken, data.expires_in);
+
+    return data.access_token;
+  } catch (e) {
+    console.error("Refresh failed:", e);
+    return null;
+  }
 }

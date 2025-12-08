@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 // Importo los componentes
-import ArtistWidget from '@/components/widgets/ArtistWidget'
-import GenreWidget from '@/components/widgets/GenreWidget'
-import MoodWidget from '@/components/widgets/MoodWidget'
-import PlaylistDisplay from '@/components/PlaylistDisplay'
+import ArtistWidget from '@/components/widgets/ArtistWidget';
+import GenreWidget from '@/components/widgets/GenreWidget';
+import MoodWidget from '@/components/widgets/MoodWidget';
+import PlaylistDisplay from '@/components/PlaylistDisplay';
 // Importo la función de lógica 
 import { getRecommendations } from '@/lib/spotify' 
 import { generatePlaylist } from '@/lib/spotify'

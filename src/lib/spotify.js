@@ -1,9 +1,4 @@
-function getAccessToken() {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('spotify_access_token');
-  }
-  return null;
-}
+import { getAccessToken } from "./auth";
 
 // 2. Función auxiliar para buscar el ID de un artista dado su nombre
 // Esto es necesario porque para pedir "top-tracks" necesitas el ID numérico, no el nombre.

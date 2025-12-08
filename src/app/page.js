@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
-      <h1 className="text-5xl font-bold mb-8 text-green-500">Spotify Mixer </h1>
+      <h1 className="text-5xl font-bold mb-8 text-green-500">Spotify Mixer</h1>
       <p className="text-xl mb-8 text-gray-300">Mezcla tus artistas favoritos y descubre música nueva.</p>
       
       <button
