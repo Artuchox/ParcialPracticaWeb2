@@ -34,7 +34,7 @@ export async function generatePlaylist(preferences) {
 
   let allTracks = [];
 
-  // PASO 1: Obtener canciones de Artistas
+  // Obtener canciones de Artistas
   if (artists && artists.length > 0) {
     for (const artistInput of artists) {
       let artistId = null;
@@ -68,7 +68,7 @@ export async function generatePlaylist(preferences) {
     }
   }
 
-  // PASO 2: Buscar canciones por Género 
+  //Buscar canciones por Género 
   if (genres && genres.length > 0) {
     for (const genre of genres) {
       try {
@@ -91,7 +91,7 @@ export async function generatePlaylist(preferences) {
     }
   }
 
-  // PASO 3: Filtrar por Década (Tu lógica original) 
+  //Filtrar por Década (Tu lógica original) 
   if (decades && decades.length > 0) {
     allTracks = allTracks.filter(track => {
       const releaseDate = track.album.release_date; 
@@ -104,7 +104,7 @@ export async function generatePlaylist(preferences) {
     });
   }
 
-  // PASO 4: Filtrar por Popularidad (Tu lógica original) 
+  // Filtrar por Popularidad (Tu lógica original) 
   if (popularity) {
     // Aseguramos que popularity sea un array [min, max]
     // Si viene del slider del Dashboard puede que sea un solo número (el mínimo)
@@ -120,10 +120,34 @@ export async function generatePlaylist(preferences) {
       track => track.popularity >= min && track.popularity <= max
     );
   }
-  // PASO 5: Eliminar duplicados y limitar resultado 
+  
+  // Eliminar duplicados y limitar resultado 
   const uniqueTracks = Array.from(
     new Map(allTracks.map(track => [track.id, track])).values()
   ).slice(0, 30); // Limitamos a 30 canciones
 
   return uniqueTracks;
+}
+
+// 4. Función para buscar el artista
+export async function searchArtist(query) {
+  const token = getAccessToken(); // Reutilizamos la función que lee del localStorage
+  
+  if (!token) return null;
+
+  try {
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=1`,
+      {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }
+    );
+
+    const data = await response.json();
+    // Devolvemos el primer artista encontrado (o null si no hay nada)
+    return data.artists?.items[0] || null;
+  } catch (error) {
+    console.error("Error buscando artista:", error);
+    return null;
+  }
 }
