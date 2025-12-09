@@ -11,12 +11,11 @@ import ArtistWidget from '@/components/widgets/ArtistWidget';
 import MoodWidget from '@/components/widgets/MoodWidget';
 import DecadeWidget from '@/components/widgets/DecadeWidget';      
 import PopularityWidget from '@/components/widgets/PopularityWidget'; 
+
 import TrackCard from '@/components/TrackCard';
 
 export default function Dashboard() {
   const router = useRouter();
-  
-  //ESTADOS
   const [selectedArtists, setSelectedArtists] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [mood, setMood] = useState({ valence: 50, energy: 50 });
@@ -51,25 +50,55 @@ export default function Dashboard() {
     }
     setLoading(false);
   };
-  // Eliminar Tracks Individuales
-  const removeTrack = (trackId) => {
-    setPlaylist(playlist.filter(track => track.id !== trackId));
-  }
 
-  // Marcar Tracks como Favoritos 
-  const toggleFavorite = (track) => {
+  const handleAddMore = async () => {
+    setLoading(true);
+    try {
+      const newTracks = await generatePlaylist({
+        genres: selectedGenres,
+        artists: selectedArtists,
+        decades: decades,       
+        popularity: popularity, 
+        mood: mood
+      });
+
+      // Filtro para NO añadir canciones que ya estén en la lista visual
+      const currentIds = new Set(playlist.map(t => t.id));
+      const uniqueNewTracks = newTracks.filter(track => !currentIds.has(track.id));
+
+      if (uniqueNewTracks.length === 0) {
+        alert("No se encontraron canciones nuevas con estos filtros (o ya las tienes todas).");
+      } else {
+        // Añadimos las nuevas al final de las anteriores
+        setPlaylist(prev => [...prev, ...uniqueNewTracks]);
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Error añadiendo canciones");
+    }
+    setLoading(false);
+  };
+
+  // Permitir remover canciones específicas de la playlist
+    const removeTrack = (trackId) => {
+        setPlaylist(playlist.filter(track => track.id !== trackId));
+    }
+    // Guardar favoritos en localStorage
+    const toggleFavorite = (track) => {
     const favorites = JSON.parse(localStorage.getItem('favorite_tracks') || '[]');
     const isFavorite = favorites.find(f => f.id === track.id);
 
     if (isFavorite) {
-      const updated = favorites.filter(f => f.id !== track.id);
-      localStorage.setItem('favorite_tracks', JSON.stringify(updated));
+        const updated = favorites.filter(f => f.id !== track.id);
+        localStorage.setItem('favorite_tracks', JSON.stringify(updated));
     } else {
-      favorites.push(track);
-      localStorage.setItem('favorite_tracks', JSON.stringify(favorites));
+        favorites.push(track);
+        localStorage.setItem('favorite_tracks', JSON.stringify(favorites));
     }
     setFavoritesRefresh(prev => prev + 1);
   }
+
   const checkIsFavorite = (trackId) => {
     if (typeof window === 'undefined') return false;
     const favorites = JSON.parse(localStorage.getItem('favorite_tracks') || '[]');
@@ -83,7 +112,6 @@ export default function Dashboard() {
           <h1 className="text-4xl font-bold text-green-500">Tu Dashboard</h1>
           <p className="text-gray-400 text-sm mt-1">Mezcla, descubre y guarda.</p>
         </div>
-        
         <div className="flex items-center gap-4">
           <button onClick={() => { logout(); router.push('/'); }} className="text-gray-400 hover:text-white font-medium">
             Cerrar Sesión
@@ -97,14 +125,22 @@ export default function Dashboard() {
         <DecadeWidget selectedDecades={decades} onChange={setDecades} />
         <PopularityWidget value={popularity} onChange={setPopularity} />
       </div>
-      <div className="flex justify-center mb-12">
+      <div className="flex justify-center gap-4 mb-12">
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="bg-green-500 hover:bg-green-400 text-black font-extrabold py-4 px-16 rounded-full text-2xl transition-all hover:scale-105 disabled:bg-gray-700"
-        >
+          className="bg-green-500 hover:bg-green-400 text-black font-extrabold py-4 px-10 rounded-full text-xl transition-all hover:scale-105 disabled:bg-gray-700 disabled:scale-100">
           {loading ? 'Mezclando...' : 'Generar Playlist 🎵'}
         </button>
+        {playlist.length > 0 && (
+          <button 
+            onClick={handleAddMore}
+            disabled={loading}
+            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-all hover:scale-105 border border-gray-600 hover:border-white disabled:opacity-50"
+          >
+            + Añadir más
+          </button>
+        )}
       </div>
       {playlist.length > 0 && (
         <div className="max-w-6xl mx-auto">
