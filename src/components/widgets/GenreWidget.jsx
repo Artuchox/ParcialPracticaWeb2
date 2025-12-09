@@ -1,7 +1,13 @@
 'use client';
 
 export default function GenreWidget({ value, onChange }) {
-  const genres = ['pop', 'rock', 'hip-hop', 'reggaeton', 'electronic', 'latin', 'indie'];
+  const genres = ['acoustic', 'alt-rock', 'alternative', 'anime', 'bluegrass', 'blues', 
+    'bossanova', 'classical', 'country', 'dance', 'disco', 'drum-and-bass', 
+    'dubstep', 'edm', 'electronic', 'emo', 'folk', 'funk', 'grunge', 
+    'hard-rock', 'heavy-metal', 'hip-hop', 'house', 'indie', 'indie-pop', 
+    'jazz', 'k-pop', 'latin', 'lo-fi', 'metal', 'pop', 'punk', 'r-n-b', 
+    'reggae', 'reggaeton', 'rock', 'salsa', 'soul', 'soundtrack', 
+    'synth-pop', 'techno', 'trap', 'work-out'];
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
