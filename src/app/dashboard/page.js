@@ -5,22 +5,21 @@ import { useRouter } from 'next/navigation';
 import { generatePlaylist } from '@/lib/spotify'; 
 import { isAuthenticated, logout } from '@/lib/auth';
 
-// Importo los componentes 
 import GenreWidget from '@/components/widgets/GenreWidget';
 import ArtistWidget from '@/components/widgets/ArtistWidget';
 import MoodWidget from '@/components/widgets/MoodWidget';
-import DecadeWidget from '@/components/widgets/DecadeWidget';      
-import PopularityWidget from '@/components/widgets/PopularityWidget'; 
+import DecadeWidget from '@/components/widgets/DecadeWidget';
+import PopularityWidget from '@/components/widgets/PopularityWidget';
 
 export default function Dashboard() {
   const router = useRouter();
   
-  // Estados para cada preferencia
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [selectedArtist, setSelectedArtist] = useState(null);
-  const [mood, setMood] = useState(50);
-  const [decades, setDecades] = useState([]);      
-  const [popularity, setPopularity] = useState(0); 
+  // CAMBIO 1: Inicializamos como array vacío []
+  const [selectedArtists, setSelectedArtists] = useState([]); 
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [mood, setMood] = useState({ valence: 50, energy: 50 });
+  const [decades, setDecades] = useState([]);
+  const [popularity, setPopularity] = useState(0);
   
   const [playlist, setPlaylist] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,12 +33,11 @@ export default function Dashboard() {
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      // Llamamos a la función con TODOS los datos
       const tracks = await generatePlaylist({
-        genres: selectedGenre ? [selectedGenre] : [],
-        artists: selectedArtist ? [selectedArtist] : [],
-        decades: decades,       
-        popularity: popularity, 
+        genres: selectedGenres,
+        artists: selectedArtists,
+        decades: decades,
+        popularity: popularity,
         mood: mood
       });
       setPlaylist(tracks);
@@ -60,9 +58,9 @@ export default function Dashboard() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        <ArtistWidget onChange={setSelectedArtist} />
-        <GenreWidget value={selectedGenre} onChange={setSelectedGenre} />
-        <MoodWidget value={mood} onChange={setMood} />
+        <ArtistWidget onChange={setSelectedArtists} />
+        <GenreWidget onChange={setSelectedGenres} />
+        <MoodWidget values={mood} onChange={setMood} />
         <DecadeWidget selectedDecades={decades} onChange={setDecades} />
         <PopularityWidget value={popularity} onChange={setPopularity} />
       </div>
@@ -71,7 +69,7 @@ export default function Dashboard() {
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="bg-green-500 hover:bg-green-600 text-black font-bold py-4 px-12 rounded-full text-2xl transition-transform hover:scale-105"
+          className="bg-green-500 hover:bg-green-600 text-black font-bold py-4 px-12 rounded-full text-2xl transition-transform hover:scale-105 disabled:bg-gray-600"
         >
           {loading ? 'Mezclando...' : 'Generar Playlist 🎵'}
         </button>
@@ -84,7 +82,7 @@ export default function Dashboard() {
               <img src={track.album.images[0].url} alt={track.name} className="w-16 h-16 rounded" />
             )}
             <div className="overflow-hidden">
-              <p className="font-bold truncate">{track.name}</p>
+              <p className="font-bold truncate text-white">{track.name}</p>
               <p className="text-gray-400 text-sm truncate">{track.artists.map(a => a.name).join(', ')}</p>
             </div>
           </div>
