@@ -29,11 +29,9 @@ export default function CallbackPage() {
     }
 
     // Validar state para prevenir CSRF
-    const savedState = localStorage.getItem('spotify_auth_state');
+    const savedState = sessionStorage.getItem('spotify_auth_state')
     if (!state || state !== savedState) {
-      setError('Error de validación de seguridad (CSRF). Intenta iniciar sesión de nuevo.');
-      localStorage.removeItem('spotify_auth_state');
-      return;
+      throw new Error('CSRF validation failed')
     }
 
     // Limpiar state después de validar
