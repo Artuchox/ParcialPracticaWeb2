@@ -39,8 +39,6 @@ export default function Dashboard() {
     setLoading(true);
     setPlaylist([]); 
     try {
-      // TRANSFORMACIÓN DE DATOS PARA QUE COINCIDAN CON EL CÓDIGO DE LA PRÁCTICA
-      
       // 1. Artistas: Convertimos ['id1', 'id2'] a [{id: 'id1'}, {id: 'id2'}]
       const artistsObjects = selectedArtists.map(id => ({ id: id }));
 
@@ -52,7 +50,6 @@ export default function Dashboard() {
         artists: artistsObjects, // Enviamos objetos
         decades: decades,       
         popularity: popularityRange, // Enviamos array [min, max]
-        // Nota: El código nuevo ignora el 'mood', así que aunque lo enviemos, no hará nada.
       });
       setPlaylist(tracks);
     } catch (error) {
@@ -65,7 +62,6 @@ export default function Dashboard() {
   const handleAddMore = async () => {
     setLoading(true);
     try {
-      // MISMA TRANSFORMACIÓN AQUÍ
       const artistsObjects = selectedArtists.map(id => ({ id: id }));
       const popularityRange = [popularity, 100];
 

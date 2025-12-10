@@ -1,6 +1,5 @@
 import { getAccessToken } from "./auth";
 
-// Esta es la función exacta que te piden
 export async function generatePlaylist(preferences) {
   const { artists, genres, decades, popularity } = preferences;
   const token = getAccessToken();

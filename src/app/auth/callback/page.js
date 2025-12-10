@@ -30,7 +30,6 @@ export default function CallbackPage() {
     }
 
     // Validar state para prevenir CSRF
-    // CORRECCIÓN: Usamos sessionStorage porque así lo guardamos en auth.js (según PDF)
     const savedState = sessionStorage.getItem('spotify_auth_state');
     
     if (!state || state !== savedState) {
@@ -50,7 +49,6 @@ export default function CallbackPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             code,
-            // CORRECCIÓN: Añadimos redirect_uri, necesario para Spotify
             redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI || 'http://localhost:3000/auth/callback'
           })
         });

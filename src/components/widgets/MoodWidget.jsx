@@ -1,8 +1,6 @@
 'use client';
 
 export default function MoodWidget({ values, onChange }) {
-  // values es un objeto: { valence: 50, energy: 50 }
-  
   const handleChange = (key, newValue) => {
     onChange({
       ...values,
