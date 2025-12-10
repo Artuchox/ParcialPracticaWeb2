@@ -13,6 +13,7 @@ export default function CallbackPage() {
   useEffect(() => {
     // Prevenir ejecución duplicada
     if (hasProcessed.current) return;
+    hasProcessed.current = true;
 
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -29,16 +30,17 @@ export default function CallbackPage() {
     }
 
     // Validar state para prevenir CSRF
-    const savedState = sessionStorage.getItem('spotify_auth_state')
+    // CORRECCIÓN: Usamos sessionStorage porque así lo guardamos en auth.js (según PDF)
+    const savedState = sessionStorage.getItem('spotify_auth_state');
+    
     if (!state || state !== savedState) {
-      throw new Error('CSRF validation failed')
+      setError('Error de validación de seguridad (CSRF). Intenta iniciar sesión de nuevo.');
+      sessionStorage.removeItem('spotify_auth_state');
+      return;
     }
 
     // Limpiar state después de validar
-    localStorage.removeItem('spotify_auth_state');
-
-    // Marcar como procesado
-    hasProcessed.current = true;
+    sessionStorage.removeItem('spotify_auth_state');
 
     // Intercambiar código por token
     const exchangeCodeForToken = async (code) => {
@@ -46,7 +48,11 @@ export default function CallbackPage() {
         const response = await fetch('/api/spotify-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ 
+            code,
+            // CORRECCIÓN: Añadimos redirect_uri, necesario para Spotify
+            redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+          })
         });
 
         const data = await response.json();

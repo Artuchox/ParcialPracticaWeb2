@@ -37,14 +37,22 @@ export default function Dashboard() {
   // generar la playlist
   const handleGenerate = async () => {
     setLoading(true);
-    setPlaylist([]);
+    setPlaylist([]); 
     try {
+      // TRANSFORMACIÓN DE DATOS PARA QUE COINCIDAN CON EL CÓDIGO DE LA PRÁCTICA
+      
+      // 1. Artistas: Convertimos ['id1', 'id2'] a [{id: 'id1'}, {id: 'id2'}]
+      const artistsObjects = selectedArtists.map(id => ({ id: id }));
+
+      // 2. Popularidad: Convertimos 50 a [50, 100] (Rango min-max)
+      const popularityRange = [popularity, 100];
+
       const tracks = await generatePlaylist({
         genres: selectedGenres,
-        artists: selectedArtists,
+        artists: artistsObjects, // Enviamos objetos
         decades: decades,       
-        popularity: popularity, 
-        mood: mood
+        popularity: popularityRange, // Enviamos array [min, max]
+        // Nota: El código nuevo ignora el 'mood', así que aunque lo enviemos, no hará nada.
       });
       setPlaylist(tracks);
     } catch (error) {
@@ -54,23 +62,25 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // añadir mas canciones
   const handleAddMore = async () => {
     setLoading(true);
     try {
+      // MISMA TRANSFORMACIÓN AQUÍ
+      const artistsObjects = selectedArtists.map(id => ({ id: id }));
+      const popularityRange = [popularity, 100];
+
       const newTracks = await generatePlaylist({
         genres: selectedGenres,
-        artists: selectedArtists,
+        artists: artistsObjects,
         decades: decades,       
-        popularity: popularity, 
-        mood: mood
+        popularity: popularityRange
       });
 
       const currentIds = new Set(playlist.map(t => t.id));
       const uniqueNewTracks = newTracks.filter(track => !currentIds.has(track.id));
 
       if (uniqueNewTracks.length === 0) {
-        alert("No se encontraron canciones nuevas con estos filtros.");
+        alert("No se encontraron canciones nuevas.");
       } else {
         setPlaylist(prev => [...prev, ...uniqueNewTracks]);
       }
