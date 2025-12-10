@@ -1,10 +1,10 @@
 import { getAccessToken } from "./auth";
 
-// Función auxiliar para obtener características de audio (Sad/Happy, Energy)
+// Función auxiliar para obtener caracteristicas de audio (vibe y Energia)
 async function getAudioFeatures(trackIds, token) {
   if (!trackIds.length) return [];
   
-  // Spotify permite máximo 100 IDs por llamada
+  // Spotify permite maximo 100 IDs por llamada
   const chunks = [];
   for (let i = 0; i < trackIds.length; i += 100) {
     chunks.push(trackIds.slice(i, i + 100));

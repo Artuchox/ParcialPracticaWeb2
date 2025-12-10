@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { generatePlaylist } from '@/lib/spotify'; 
 import { isAuthenticated, logout } from '@/lib/auth';
 
-// Widgets
+import styles from './dashboard.module.css';
+
+// Widgets 
 import GenreWidget from '@/components/widgets/GenreWidget';
 import ArtistWidget from '@/components/widgets/ArtistWidget';
 import MoodWidget from '@/components/widgets/MoodWidget';
@@ -32,9 +34,10 @@ export default function Dashboard() {
     }
   }, [router]);
 
+  // generar la playlist
   const handleGenerate = async () => {
     setLoading(true);
-    setPlaylist([]); 
+    setPlaylist([]);
     try {
       const tracks = await generatePlaylist({
         genres: selectedGenres,
@@ -51,6 +54,7 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  // añadir mas canciones
   const handleAddMore = async () => {
     setLoading(true);
     try {
@@ -62,17 +66,14 @@ export default function Dashboard() {
         mood: mood
       });
 
-      // Filtro para NO añadir canciones que ya estén en la lista visual
       const currentIds = new Set(playlist.map(t => t.id));
       const uniqueNewTracks = newTracks.filter(track => !currentIds.has(track.id));
 
       if (uniqueNewTracks.length === 0) {
-        alert("No se encontraron canciones nuevas con estos filtros (o ya las tienes todas).");
+        alert("No se encontraron canciones nuevas con estos filtros.");
       } else {
-        // Añadimos las nuevas al final de las anteriores
         setPlaylist(prev => [...prev, ...uniqueNewTracks]);
       }
-
     } catch (error) {
       console.error(error);
       alert("Error añadiendo canciones");
@@ -80,21 +81,21 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // Permitir remover canciones específicas de la playlist
-    const removeTrack = (trackId) => {
-        setPlaylist(playlist.filter(track => track.id !== trackId));
-    }
-    // Guardar favoritos en localStorage
-    const toggleFavorite = (track) => {
+  // funciones de la gestion
+  const removeTrack = (trackId) => {
+    setPlaylist(playlist.filter(track => track.id !== trackId));
+  }
+
+  const toggleFavorite = (track) => {
     const favorites = JSON.parse(localStorage.getItem('favorite_tracks') || '[]');
     const isFavorite = favorites.find(f => f.id === track.id);
 
     if (isFavorite) {
-        const updated = favorites.filter(f => f.id !== track.id);
-        localStorage.setItem('favorite_tracks', JSON.stringify(updated));
+      const updated = favorites.filter(f => f.id !== track.id);
+      localStorage.setItem('favorite_tracks', JSON.stringify(updated));
     } else {
-        favorites.push(track);
-        localStorage.setItem('favorite_tracks', JSON.stringify(favorites));
+      favorites.push(track);
+      localStorage.setItem('favorite_tracks', JSON.stringify(favorites));
     }
     setFavoritesRefresh(prev => prev + 1);
   }
@@ -106,49 +107,49 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8 pb-32">
-      <header className="flex justify-between items-center mb-10 sticky top-0 bg-black/90 backdrop-blur z-50 py-4 border-b border-gray-800">
+    <div className={styles.container}>
+      <header className={styles.header}>
         <div>
-          <h1 className="text-4xl font-bold text-green-500">Tu Dashboard</h1>
-          <p className="text-gray-400 text-sm mt-1">Mezcla, descubre y guarda.</p>
+          <h1 className={styles.title}>Spotify Taste Mixer - Proyecto Final</h1>
+          <p className={styles.subtitle}>Creado por Art Schmitz</p>
         </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => { logout(); router.push('/'); }} className="text-gray-400 hover:text-white font-medium">
-            Cerrar Sesión
-          </button>
-        </div>
+        <button onClick={() => { logout(); router.push('/'); }} className={styles.logoutBtn}>
+          Cerrar Sesión
+        </button>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <div className={styles.widgetsGrid}>
         <ArtistWidget onChange={setSelectedArtists} />
         <GenreWidget onChange={setSelectedGenres} />
         <MoodWidget values={mood} onChange={setMood} />
         <DecadeWidget selectedDecades={decades} onChange={setDecades} />
         <PopularityWidget value={popularity} onChange={setPopularity} />
       </div>
-      <div className="flex justify-center gap-4 mb-12">
+      <div className={styles.actionsContainer}>
         <button 
           onClick={handleGenerate}
           disabled={loading}
-          className="bg-green-500 hover:bg-green-400 text-black font-extrabold py-4 px-10 rounded-full text-xl transition-all hover:scale-105 disabled:bg-gray-700 disabled:scale-100">
+          className={styles.btnPrimary}
+        >
           {loading ? 'Mezclando...' : 'Generar Playlist 🎵'}
         </button>
+
         {playlist.length > 0 && (
           <button 
             onClick={handleAddMore}
             disabled={loading}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-full text-xl transition-all hover:scale-105 border border-gray-600 hover:border-white disabled:opacity-50"
+            className={styles.btnSecondary}
           >
             + Añadir más
           </button>
         )}
       </div>
       {playlist.length > 0 && (
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            Resultados <span className="text-sm font-normal text-gray-400">({playlist.length})</span>
+        <div className={styles.resultsContainer}>
+          <h2 className={styles.resultsHeader}>
+            Resultados <span className={styles.count}>({playlist.length})</span>
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={styles.tracksGrid}>
             {playlist.map((track) => (
               <TrackCard 
                 key={track.id} 

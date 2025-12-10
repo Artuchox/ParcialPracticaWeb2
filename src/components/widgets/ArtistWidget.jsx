@@ -5,7 +5,7 @@ import { searchArtist } from '@/lib/spotify'
 
 export default function ArtistWidget({ onChange }) {
   const [query, setQuery] = useState('')
-  const [selectedArtists, setSelectedArtists] = useState([]) // Ahora es un array
+  const [selectedArtists, setSelectedArtists] = useState([])
   const [loading, setLoading] = useState(false)
 
   const handleSearch = async () => {
@@ -16,7 +16,7 @@ export default function ArtistWidget({ onChange }) {
     setLoading(false);
 
     if (result) {
-      // Verificar si ya está en la lista para no repetir
+      // Verificar si ya esta en la lista para no repetir
       const alreadySelected = selectedArtists.find(a => a.id === result.id);
       
       if (alreadySelected) {
@@ -32,7 +32,7 @@ export default function ArtistWidget({ onChange }) {
         const ids = newList.map(a => a.id);
         onChange(ids);
         
-        // Limpiamos el buscador
+        // Limpia el buscador
         setQuery(''); 
       }
     } else {
@@ -43,7 +43,7 @@ export default function ArtistWidget({ onChange }) {
   const removeArtist = (artistId) => {
     const newList = selectedArtists.filter(a => a.id !== artistId);
     setSelectedArtists(newList);
-    // Actualizamos al padre
+    // Actualiza al padre
     onChange(newList.map(a => a.id));
   };
 

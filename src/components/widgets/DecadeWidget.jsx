@@ -4,7 +4,7 @@ export default function DecadeWidget({ selectedDecades, onChange }) {
   const decades = ['1960', '1970', '1980', '1990', '2000', '2010', '2020'];
 
   const toggleDecade = (decade) => {
-    // Si ya está seleccionado, lo quitamos. Si no, lo agregamos.
+    // Si ya esta seleccionado, lo quitamos. Si no, lo agregamos.
     if (selectedDecades.includes(decade)) {
       onChange(selectedDecades.filter(d => d !== decade));
     } else {
